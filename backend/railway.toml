@@ -1,5 +1,5 @@
 [deploy]
 # Run DB migrations, then start 4 Uvicorn workers
-startCommand = "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4"
+startCommand = "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4"
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 30
