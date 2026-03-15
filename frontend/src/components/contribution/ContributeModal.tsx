@@ -44,8 +44,6 @@ export function ContributeModal({ open, onOpenChange, item, slug }: ContributeMo
       queryClient.setQueryData<PublicList>(["list-public", slug], (old) => {
         if (!old) return old;
         const newTotal = (total + parseFloat(contribution.amount)).toFixed(2);
-        const newPct =
-          target !== null ? Math.min((parseFloat(newTotal) / target) * 100, 100) : null;
         return {
           ...old,
           items: old.items.map((i) =>
