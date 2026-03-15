@@ -65,7 +65,7 @@ async def update_item(
 # 4. DELETE /lists/{list_id}/items/{item_id} — two-phase delete
 #   Phase 1 (no confirm): clean → 204; has dependencies → 200 + warning
 #   Phase 2 (confirm=true): always soft-delete → 200 + {deleted, soft}
-@router.delete("/{list_id}/items/{item_id}")
+@router.delete("/{list_id}/items/{item_id}", response_model=None)
 async def delete_item(
     list_id: uuid.UUID,
     item_id: uuid.UUID,
