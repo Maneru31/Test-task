@@ -14,7 +14,6 @@ import type {
   WsReservationPayload,
   WsContributionPayload,
   WsItemPayload,
-  WsReorderPayload,
   WsListPayload,
 } from "@/types";
 
