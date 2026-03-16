@@ -22,6 +22,7 @@ export default function PublicListPage({ params }: PublicListPageProps) {
     queryKey: ["list-public", slug],
     queryFn: () => getPublicList(slug),
     retry: false,
+    refetchInterval: 5000,
   });
 
   if (isLoading) {

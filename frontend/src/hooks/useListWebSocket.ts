@@ -77,6 +77,7 @@ export function useListWebSocket(
           ws?.close();
           return;
         }
+        console.log("[WS] connected:", url);
         if (wasConnected) {
           // Reconnect: invalidate the relevant query to sync any missed updates
           if (modeRef.current === "public" && slugRef.current) {
@@ -95,6 +96,7 @@ export function useListWebSocket(
 
       ws.onmessage = (event: MessageEvent) => {
         if (destroyed) return;
+        console.log("[WS] message:", event.data);
         let parsed: WsEvent<unknown>;
         try {
           parsed = JSON.parse(event.data as string) as WsEvent<unknown>;
@@ -104,12 +106,13 @@ export function useListWebSocket(
         handleEvent(parsed);
       };
 
-      ws.onerror = () => {
-        // Let onclose handle reconnect logic
+      ws.onerror = (e) => {
+        console.error("[WS] error:", e);
         ws?.close();
       };
 
-      ws.onclose = () => {
+      ws.onclose = (e) => {
+        console.log("[WS] closed — code:", e.code, "reason:", e.reason, "wasConnected:", wasConnected);
         if (destroyed) return;
         ws = null;
         const delay =
