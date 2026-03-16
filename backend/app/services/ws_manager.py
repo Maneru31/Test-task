@@ -44,14 +44,21 @@ class ConnectionManager:
         self._listener_task: asyncio.Task | None = None  # type: ignore[type-arg]
 
     async def startup(self) -> None:
-        """Connect to Redis and start the pub/sub listener background task."""
+        """Connect to Redis and start the pub/sub listener background task.
+
+        If Redis is unavailable, self._redis stays None and publish() falls
+        back to direct in-process dispatch (single-worker mode).
+        """
         try:
-            self._redis = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+            redis = aioredis.from_url(settings.REDIS_URL, decode_responses=True, socket_connect_timeout=3)
+            await redis.ping()  # fail fast if Redis is not reachable
+            self._redis = redis
             self._pubsub = self._redis.pubsub()
             self._listener_task = asyncio.create_task(self._listen(), name="ws-redis-listener")
             logger.info("WS manager: Redis connected, listener started")
         except Exception as exc:
-            logger.error("WS manager: failed to connect to Redis: %s", exc)
+            logger.warning("WS manager: Redis not available (%s) — using direct in-process dispatch", exc)
+            # self._redis stays None; publish() will dispatch directly
 
     async def shutdown(self) -> None:
         """Cancel listener and close Redis connections."""
