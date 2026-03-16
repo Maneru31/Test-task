@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { GiftIcon, LogOutIcon, LayoutDashboardIcon } from "lucide-react";
+import { GiftIcon, LogOutIcon, LayoutDashboardIcon, UserIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -37,9 +37,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
               Мои списки
             </Link>
             <span className="hidden text-sm text-zinc-600 sm:block">|</span>
-            <span className="hidden max-w-[140px] truncate text-sm text-zinc-400 sm:block">
-              {user.display_name || user.email}
-            </span>
+            <Link
+              href="/profile"
+              className="hidden items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-white sm:flex"
+            >
+              <UserIcon className="size-4" />
+              <span className="max-w-[120px] truncate">{user.display_name || user.email}</span>
+            </Link>
             <button
               onClick={logout}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-all hover:bg-zinc-800 hover:text-red-400"

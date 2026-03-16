@@ -19,7 +19,12 @@ import type {
 } from "@/types";
 
 const WS_BASE_URL =
-  process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_WS_URL ??
+  (process.env.NEXT_PUBLIC_API_URL
+    ? process.env.NEXT_PUBLIC_API_URL.replace(/^https?/, (p) =>
+        p === "https" ? "wss" : "ws"
+      )
+    : "ws://localhost:8000/api/v1");
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000];
 
@@ -184,44 +189,52 @@ export function useListWebSocket(
           break;
         }
         case "item.created": {
-          const p = payload as PublicItem;
+          const p = payload as { item_id: string; item: PublicItem };
+          const newItem: PublicItem = {
+            is_reserved: false,
+            total_contributed: "0",
+            reserved_by_me: false,
+            reserver_name: null,
+            my_contributions: [],
+            ...p.item,
+          };
           queryClient.setQueryData<PublicList>(queryKey, (old) => {
             if (!old) return old;
-            if (old.items.some((item) => item.id === p.id)) return old;
-            return { ...old, items: [...old.items, p] };
+            if (old.items.some((item) => item.id === newItem.id)) return old;
+            return { ...old, items: [...old.items, newItem] };
           });
           break;
         }
         case "item.updated": {
-          const p = payload as WsItemPayload;
+          const p = payload as { item_id: string; item: WsItemPayload };
           queryClient.setQueryData<PublicList>(queryKey, (old) => {
             if (!old) return old;
             return {
               ...old,
               items: old.items.map((item) =>
-                item.id === p.id ? { ...item, ...p } : item
+                item.id === p.item_id ? { ...item, ...p.item } : item
               ),
             };
           });
           break;
         }
         case "item.deleted": {
-          const p = payload as { id: string };
+          const p = payload as { item_id: string };
           queryClient.setQueryData<PublicList>(queryKey, (old) => {
             if (!old) return old;
             return {
               ...old,
-              items: old.items.filter((item) => item.id !== p.id),
+              items: old.items.filter((item) => item.id !== p.item_id),
             };
           });
           break;
         }
         case "item.reordered": {
-          const p = payload as WsReorderPayload;
+          const p = payload as { item_ids: string[] };
           queryClient.setQueryData<PublicList>(queryKey, (old) => {
             if (!old) return old;
             const positionMap = new Map(
-              p.items.map(({ id, position }) => [id, position])
+              p.item_ids.map((id, idx) => [id, idx])
             );
             const updatedItems = old.items
               .map((item) =>
@@ -235,10 +248,10 @@ export function useListWebSocket(
           break;
         }
         case "list.updated": {
-          const p = payload as WsListPayload;
+          const p = payload as { list: WsListPayload };
           queryClient.setQueryData<PublicList>(queryKey, (old) => {
             if (!old) return old;
-            return { ...old, ...p } as PublicList;
+            return { ...old, ...p.list } as PublicList;
           });
           break;
         }
@@ -254,44 +267,44 @@ export function useListWebSocket(
 
       switch (event) {
         case "item.created": {
-          const p = payload as Item;
+          const p = payload as { item_id: string; item: Item };
           queryClient.setQueryData<ListWithItems>(queryKey, (old) => {
             if (!old) return old;
-            if (old.items.some((item) => item.id === p.id)) return old;
-            return { ...old, items: [...old.items, p] };
+            if (old.items.some((item) => item.id === p.item_id)) return old;
+            return { ...old, items: [...old.items, p.item] };
           });
           break;
         }
         case "item.updated": {
-          const p = payload as Partial<Item> & { id: string };
+          const p = payload as { item_id: string; item: Partial<Item> };
           queryClient.setQueryData<ListWithItems>(queryKey, (old) => {
             if (!old) return old;
             return {
               ...old,
               items: old.items.map((item) =>
-                item.id === p.id ? { ...item, ...p } : item
+                item.id === p.item_id ? { ...item, ...p.item } : item
               ),
             };
           });
           break;
         }
         case "item.deleted": {
-          const p = payload as { id: string };
+          const p = payload as { item_id: string };
           queryClient.setQueryData<ListWithItems>(queryKey, (old) => {
             if (!old) return old;
             return {
               ...old,
-              items: old.items.filter((item) => item.id !== p.id),
+              items: old.items.filter((item) => item.id !== p.item_id),
             };
           });
           break;
         }
         case "item.reordered": {
-          const p = payload as WsReorderPayload;
+          const p = payload as { item_ids: string[] };
           queryClient.setQueryData<ListWithItems>(queryKey, (old) => {
             if (!old) return old;
             const positionMap = new Map(
-              p.items.map(({ id, position }) => [id, position])
+              p.item_ids.map((id, idx) => [id, idx])
             );
             const updatedItems = old.items
               .map((item) =>
@@ -305,10 +318,10 @@ export function useListWebSocket(
           break;
         }
         case "list.updated": {
-          const p = payload as WsListPayload;
+          const p = payload as { list: WsListPayload };
           queryClient.setQueryData<ListWithItems>(queryKey, (old) => {
             if (!old) return old;
-            return { ...old, ...p } as ListWithItems;
+            return { ...old, ...p.list } as ListWithItems;
           });
           break;
         }
