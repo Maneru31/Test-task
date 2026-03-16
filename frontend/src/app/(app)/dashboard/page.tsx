@@ -7,7 +7,6 @@ import { getLists } from "@/lib/listsApi";
 import { ListCard } from "@/components/list/ListCard";
 import { CreateListModal } from "@/components/list/CreateListModal";
 import { EmptyDashboard } from "@/components/empty-states/EmptyDashboard";
-import { Button } from "@/components/ui/button";
 import type { ListSummary } from "@/types";
 
 export default function DashboardPage() {
@@ -19,33 +18,26 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-3xl font-bold text-transparent">
-              Мои вишлисты
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Создавай списки желаний и делись ими с близкими
-            </p>
-          </div>
-          <Button
-            onClick={() => setCreateOpen(true)}
-            className="gap-2 bg-gradient-to-r from-primary to-pink-500 hover:opacity-90"
-          >
-            <PlusIcon className="size-4" />
-            <span className="hidden sm:inline">Создать список</span>
-            <span className="sm:hidden">Создать</span>
-          </Button>
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Мои вишлисты</h1>
+          <p className="mt-0.5 text-sm text-zinc-500">Создавай и делись с близкими</p>
         </div>
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-400 active:scale-95"
+        >
+          <PlusIcon className="size-4" />
+          <span className="hidden sm:inline">Создать список</span>
+          <span className="sm:hidden">Создать</span>
+        </button>
       </div>
 
       {isLoading && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl bg-muted" />
+            <div key={i} className="h-32 animate-pulse rounded-2xl bg-zinc-800" />
           ))}
         </div>
       )}

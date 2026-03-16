@@ -16,19 +16,11 @@ const OCCASION_LABELS: Record<string, string> = {
 };
 
 const OCCASION_COLORS: Record<string, string> = {
-  birthday: "bg-pink-100 text-pink-700",
-  new_year: "bg-blue-100 text-blue-700",
-  wedding: "bg-purple-100 text-purple-700",
-  other: "bg-emerald-100 text-emerald-700",
+  birthday: "bg-pink-500/10 text-pink-400",
+  new_year: "bg-blue-500/10 text-blue-400",
+  wedding: "bg-purple-500/10 text-purple-400",
+  other: "bg-emerald-500/10 text-emerald-400",
 };
-
-const CARD_GRADIENTS = [
-  "from-violet-500 to-purple-600",
-  "from-pink-500 to-rose-600",
-  "from-blue-500 to-indigo-600",
-  "from-emerald-500 to-teal-600",
-  "from-orange-500 to-amber-600",
-];
 
 interface ListCardProps {
   list: ListSummary;
@@ -36,8 +28,6 @@ interface ListCardProps {
 
 export function ListCard({ list }: ListCardProps) {
   const queryClient = useQueryClient();
-  const gradientIdx = list.id.charCodeAt(0) % CARD_GRADIENTS.length;
-  const gradient = CARD_GRADIENTS[gradientIdx];
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteList(list.id),
@@ -45,9 +35,7 @@ export function ListCard({ list }: ListCardProps) {
       queryClient.invalidateQueries({ queryKey: ["lists"] });
       toast.success("Список удалён");
     },
-    onError: () => {
-      toast.error("Не удалось удалить список");
-    },
+    onError: () => toast.error("Не удалось удалить список"),
   });
 
   function handleDelete(e: React.MouseEvent) {
@@ -58,24 +46,24 @@ export function ListCard({ list }: ListCardProps) {
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-      {/* Gradient top bar */}
-      <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`} />
+    <div className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 transition-all hover:border-orange-500/40 hover:bg-zinc-800/80">
+      {/* Orange top accent */}
+      <div className="h-0.5 w-full bg-gradient-to-r from-orange-500 to-amber-400 opacity-0 transition-opacity group-hover:opacity-100" />
 
       <Link href={`/lists/${list.id}`} className="block p-5">
         <div className="mb-3 flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 font-semibold leading-tight">{list.title}</h3>
+          <h3 className="line-clamp-2 font-semibold leading-tight text-white">{list.title}</h3>
           {list.occasion && (
-            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${OCCASION_COLORS[list.occasion] ?? "bg-muted text-muted-foreground"}`}>
+            <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${OCCASION_COLORS[list.occasion] ?? "bg-zinc-800 text-zinc-400"}`}>
               {OCCASION_LABELS[list.occasion] ?? list.occasion}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm text-zinc-500">
           <span className="flex items-center gap-1.5">
-            <GiftIcon className="size-4 text-primary" />
-            <span className="font-medium text-foreground">{list.item_count}</span>
+            <GiftIcon className="size-4 text-orange-500" />
+            <span className="font-medium text-zinc-300">{list.item_count}</span>
             {" "}подарк{list.item_count === 1 ? "" : list.item_count < 5 ? "а" : "ов"}
           </span>
           {list.occasion_date && (
@@ -91,7 +79,7 @@ export function ListCard({ list }: ListCardProps) {
         onClick={handleDelete}
         disabled={deleteMutation.isPending}
         aria-label="Удалить список"
-        className="absolute right-3 top-5 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 disabled:opacity-50"
+        className="absolute right-3 top-4 rounded-lg p-1.5 text-zinc-700 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 disabled:opacity-50"
       >
         <Trash2Icon className="size-4" />
       </button>

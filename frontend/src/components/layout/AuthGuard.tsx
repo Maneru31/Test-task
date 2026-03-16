@@ -3,52 +3,53 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { GiftIcon, LogOutIcon } from "lucide-react";
+import { GiftIcon, LogOutIcon, LayoutDashboardIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace("/login");
-    }
+    if (!isLoading && !user) router.replace("/login");
   }, [user, isLoading, router]);
 
   if (isLoading) return null;
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
-              <GiftIcon className="size-4 text-primary-foreground" />
+    <div className="min-h-screen bg-zinc-950">
+      <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-orange-500">
+              <GiftIcon className="size-4 text-white" />
             </div>
-            <span className="font-bold text-primary">Wishify</span>
+            <span className="font-bold text-white">Wishify</span>
           </Link>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:block">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard"
+              className="hidden items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-white sm:flex"
+            >
+              <LayoutDashboardIcon className="size-4" />
+              Мои списки
+            </Link>
+            <span className="hidden text-sm text-zinc-600 sm:block">|</span>
+            <span className="hidden max-w-[140px] truncate text-sm text-zinc-400 sm:block">
               {user.display_name || user.email}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={logout}
-              className="text-muted-foreground hover:text-destructive"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-500 transition-all hover:bg-zinc-800 hover:text-red-400"
             >
               <LogOutIcon className="size-4" />
-              <span className="ml-1.5 hidden sm:inline">Выйти</span>
-            </Button>
+              <span className="hidden sm:inline">Выйти</span>
+            </button>
           </div>
         </div>
       </header>
-
       <main>{children}</main>
     </div>
   );

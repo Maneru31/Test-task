@@ -14,7 +14,6 @@ import type { TokenResponse } from "@/types/index";
 export default function RegisterPage() {
   const { login } = useAuth();
   const router = useRouter();
-
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,11 +25,7 @@ export default function RegisterPage() {
     setError(null);
     setIsPending(true);
     try {
-      await api.post<TokenResponse>("/auth/register", {
-        display_name: displayName,
-        email,
-        password,
-      });
+      await api.post<TokenResponse>("/auth/register", { display_name: displayName, email, password });
       await login({ email, password });
       router.replace("/dashboard");
     } catch {
@@ -41,76 +36,57 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet-50 via-background to-pink-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="mb-3 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-pink-500 shadow-lg">
+        <Link href="/" className="mb-8 flex flex-col items-center gap-3">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-orange-500 shadow-lg shadow-orange-500/25">
             <GiftIcon className="size-7 text-white" />
           </div>
-          <h1 className="bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-2xl font-bold text-transparent">
-            Wishify
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Создать аккаунт</p>
-        </div>
+          <span className="text-xl font-bold text-white">Wishify</span>
+        </Link>
 
-        {/* Card */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+          <h2 className="mb-6 text-center text-lg font-semibold text-white">Создать аккаунт</h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="displayName">Имя</Label>
+              <Label htmlFor="displayName" className="text-zinc-400">Имя</Label>
               <Input
-                id="displayName"
-                type="text"
-                autoComplete="name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
+                id="displayName" type="text" autoComplete="name"
+                value={displayName} onChange={(e) => setDisplayName(e.target.value)} required
+                className="border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-600 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-zinc-400">Email</Label>
               <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                id="email" type="email" autoComplete="email"
+                value={email} onChange={(e) => setEmail(e.target.value)} required
+                className="border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-600 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="password" className="text-zinc-400">Пароль</Label>
               <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
+                id="password" type="password" autoComplete="new-password"
+                value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
+                className="border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-600 focus-visible:border-orange-500 focus-visible:ring-orange-500/20"
               />
             </div>
-            {error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-            )}
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="bg-gradient-to-r from-primary to-pink-500 hover:opacity-90"
-            >
-              {isPending ? "Создаём аккаунт…" : "Создать аккаунт"}
+            {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
+            <Button type="submit" disabled={isPending} className="bg-orange-500 text-white hover:bg-orange-400">
+              {isPending ? "Создаём…" : "Создать аккаунт"}
             </Button>
           </form>
-          <div className="relative my-4 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">или</span>
-            <div className="h-px flex-1 bg-border" />
+
+          <div className="relative my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-zinc-800" />
+            <span className="text-xs text-zinc-600">или</span>
+            <div className="h-px flex-1 bg-zinc-800" />
           </div>
 
           <a
             href="/api/v1/auth/google"
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-shadow hover:shadow-md"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-200 transition-all hover:border-zinc-600 hover:bg-zinc-700"
           >
             <svg viewBox="0 0 24 24" className="size-4" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -121,9 +97,9 @@ export default function RegisterPage() {
             Зарегистрироваться через Google
           </a>
 
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          <p className="mt-5 text-center text-sm text-zinc-600">
             Уже есть аккаунт?{" "}
-            <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link href="/login" className="font-medium text-orange-400 hover:text-orange-300">
               Войти
             </Link>
           </p>
