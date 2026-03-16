@@ -122,7 +122,6 @@ async def google_login() -> RedirectResponse:
 @router.get("/google/callback")
 async def google_callback(
     code: str,
-    response: Response,
     db: AsyncSession = Depends(get_db),
 ) -> RedirectResponse:
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
@@ -140,12 +139,21 @@ async def google_callback(
     )
     access_token = create_access_token(str(user.id))
     refresh_token = create_refresh_token(str(user.id))
-    _set_refresh_cookie(response, refresh_token)
     frontend_callback = (
         f"{settings.FRONTEND_URL.rstrip('/')}/callback"
         f"?access_token={access_token}"
     )
-    return RedirectResponse(url=frontend_callback)
+    redirect = RedirectResponse(url=frontend_callback)
+    redirect.set_cookie(
+        key=REFRESH_COOKIE,
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        path=COOKIE_PATH,
+        max_age=COOKIE_MAX_AGE,
+    )
+    return redirect
 
 
 # 7. GET /auth/me
