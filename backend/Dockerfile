@@ -11,6 +11,4 @@ COPY . .
 
 USER app
 
-EXPOSE 8000
-
 CMD ["sh", "start.sh"]
