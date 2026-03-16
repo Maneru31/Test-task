@@ -50,8 +50,13 @@ class ConnectionManager:
         back to direct in-process dispatch (single-worker mode).
         """
         try:
-            redis = aioredis.from_url(settings.REDIS_URL, decode_responses=True, socket_connect_timeout=3)
-            await redis.ping()  # fail fast if Redis is not reachable
+            redis = aioredis.from_url(
+                settings.REDIS_URL,
+                decode_responses=True,
+                socket_connect_timeout=2,
+                socket_timeout=2,
+            )
+            await asyncio.wait_for(redis.ping(), timeout=2.0)
             self._redis = redis
             self._pubsub = self._redis.pubsub()
             self._listener_task = asyncio.create_task(self._listen(), name="ws-redis-listener")
