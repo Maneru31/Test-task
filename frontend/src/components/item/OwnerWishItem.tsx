@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVerticalIcon, PencilIcon, Trash2Icon, ExternalLinkIcon } from "lucide-react";
+import { GripVerticalIcon, PencilIcon, Trash2Icon, ExternalLinkIcon, GiftIcon } from "lucide-react";
 import { formatPrice } from "@/lib/formatters";
 import { EditItemModal } from "./EditItemModal";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
@@ -30,7 +30,7 @@ export function OwnerWishItem({ item, listId }: OwnerWishItemProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
   };
 
   return (
@@ -38,14 +38,14 @@ export function OwnerWishItem({ item, listId }: OwnerWishItemProps) {
       <div
         ref={setNodeRef}
         style={style}
-        className="flex items-center gap-3 rounded-xl border border-border bg-background p-3 transition-shadow"
+        className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
       >
         {/* Drag handle */}
         <button
           {...attributes}
           {...listeners}
           aria-label="Перетащить"
-          className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+          className="cursor-grab touch-none text-muted-foreground/40 hover:text-muted-foreground active:cursor-grabbing"
         >
           <GripVerticalIcon className="size-4" />
         </button>
@@ -55,22 +55,24 @@ export function OwnerWishItem({ item, listId }: OwnerWishItemProps) {
           <img
             src={item.image_url}
             alt={item.name}
-            className="size-12 shrink-0 rounded-lg object-cover"
+            className="size-14 shrink-0 rounded-xl object-cover"
           />
         ) : (
-          <div className="size-12 shrink-0 rounded-lg bg-muted" />
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-pink-500/10">
+            <GiftIcon className="size-6 text-primary/50" />
+          </div>
         )}
 
         {/* Info */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="truncate text-sm font-medium">{item.name}</p>
+            <p className="truncate font-medium">{item.name}</p>
             {item.url && (
               <a
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 text-muted-foreground hover:text-foreground"
+                className="shrink-0 text-muted-foreground hover:text-primary"
                 onClick={(e) => e.stopPropagation()}
               >
                 <ExternalLinkIcon className="size-3.5" />
@@ -78,28 +80,28 @@ export function OwnerWishItem({ item, listId }: OwnerWishItemProps) {
             )}
           </div>
           {item.description && (
-            <p className="truncate text-xs text-muted-foreground">{item.description}</p>
+            <p className="truncate text-sm text-muted-foreground">{item.description}</p>
           )}
           {item.price && (
-            <p className="mt-0.5 text-xs font-medium text-foreground">
+            <p className="mt-0.5 text-sm font-semibold text-primary">
               {formatPrice(item.price, item.currency)}
             </p>
           )}
         </div>
 
         {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             onClick={() => setEditOpen(true)}
             aria-label="Редактировать"
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-primary/10 hover:text-primary"
           >
             <PencilIcon className="size-4" />
           </button>
           <button
             onClick={() => setDeleteOpen(true)}
             aria-label="Удалить"
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-red-50 hover:text-red-500"
           >
             <Trash2Icon className="size-4" />
           </button>
