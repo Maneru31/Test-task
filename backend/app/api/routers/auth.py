@@ -130,7 +130,7 @@ async def google_callback(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
             detail="Google OAuth not configured",
         )
-    redirect_uri = "http://localhost:8000/api/v1/auth/google/callback"
+    redirect_uri = f"{settings.FRONTEND_URL.rstrip('/')}/api/v1/auth/google/callback"
     user = await auth_service.get_or_create_google_user(
         code=code,
         redirect_uri=redirect_uri,
