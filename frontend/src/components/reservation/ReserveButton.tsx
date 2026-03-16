@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { GuestNameModal } from "@/components/guest/GuestNameModal";
 import { reserveItem, releaseReservation } from "@/lib/publicApi";
 import { useGuestSession } from "@/hooks/useGuestSession";
+import { useAuth } from "@/hooks/useAuth";
 import type { PublicItem, PublicList } from "@/types";
 
 interface ReserveButtonProps {
@@ -16,6 +17,7 @@ interface ReserveButtonProps {
 }
 
 export function ReserveButton({ item, slug }: ReserveButtonProps) {
+  const { user } = useAuth();
   const { guestToken } = useGuestSession();
   const [guestModalOpen, setGuestModalOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -64,7 +66,8 @@ export function ReserveButton({ item, slug }: ReserveButtonProps) {
   });
 
   function handleReserveClick() {
-    if (!guestToken) {
+    // Logged-in users can reserve directly; only anonymous visitors need guest name
+    if (!user && !guestToken) {
       setGuestModalOpen(true);
       return;
     }

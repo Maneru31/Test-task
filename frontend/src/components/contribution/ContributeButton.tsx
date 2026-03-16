@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { GuestNameModal } from "@/components/guest/GuestNameModal";
 import { ContributeModal } from "./ContributeModal";
 import { useGuestSession } from "@/hooks/useGuestSession";
+import { useAuth } from "@/hooks/useAuth";
 import type { PublicItem } from "@/types";
 
 interface ContributeButtonProps {
@@ -14,12 +15,13 @@ interface ContributeButtonProps {
 }
 
 export function ContributeButton({ item, slug }: ContributeButtonProps) {
+  const { user } = useAuth();
   const { guestToken } = useGuestSession();
   const [guestModalOpen, setGuestModalOpen] = useState(false);
   const [contributeModalOpen, setContributeModalOpen] = useState(false);
 
   function handleClick() {
-    if (!guestToken) {
+    if (!user && !guestToken) {
       setGuestModalOpen(true);
     } else {
       setContributeModalOpen(true);
