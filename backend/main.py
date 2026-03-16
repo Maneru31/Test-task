@@ -123,20 +123,19 @@ class CORSEchoMiddleware:
         await self.app(scope, receive, send_with_cors)
 
 
-app = FastAPI(title="Wishify API", version="1.0.0", lifespan=lifespan)
-app.add_middleware(CORSEchoMiddleware)
+_fastapi = FastAPI(title="Wishify API", version="1.0.0", lifespan=lifespan)
 
 # Routers
-app.include_router(auth_router.router, prefix="/api/v1")
-app.include_router(lists_router.router, prefix="/api/v1")
-app.include_router(items_router.router, prefix="/api/v1")
-app.include_router(reservations_router.router, prefix="/api/v1")
-app.include_router(contributions_router.router, prefix="/api/v1")
-app.include_router(websocket_router.router, prefix="/api/v1")
-app.include_router(util_router.router, prefix="/api/v1")
+_fastapi.include_router(auth_router.router, prefix="/api/v1")
+_fastapi.include_router(lists_router.router, prefix="/api/v1")
+_fastapi.include_router(items_router.router, prefix="/api/v1")
+_fastapi.include_router(reservations_router.router, prefix="/api/v1")
+_fastapi.include_router(contributions_router.router, prefix="/api/v1")
+_fastapi.include_router(websocket_router.router, prefix="/api/v1")
+_fastapi.include_router(util_router.router, prefix="/api/v1")
 
 
-@app.get("/api/v1/health")
+@_fastapi.get("/api/v1/health")
 async def health() -> dict:
     from sqlalchemy import text
     import redis.asyncio as aioredis
@@ -161,3 +160,7 @@ async def health() -> dict:
         logger.error("Health check Redis failed: %s", exc)
 
     return {"status": "ok", "db": db_status, "redis": redis_status}
+
+
+# Wrap FastAPI with CORS middleware directly — bypasses add_middleware machinery
+app = CORSEchoMiddleware(_fastapi)
