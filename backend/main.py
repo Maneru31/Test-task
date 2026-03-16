@@ -106,6 +106,11 @@ app.include_router(websocket_router.router, prefix="/api/v1")
 app.include_router(util_router.router, prefix="/api/v1")
 
 
+@app.get("/ping")
+async def ping() -> dict:
+    return {"ping": "pong"}
+
+
 @app.get("/api/v1/health")
 async def health() -> dict:
     from sqlalchemy import text
