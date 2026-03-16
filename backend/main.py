@@ -84,58 +84,29 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await manager.shutdown()
 
 
-class CORSEchoMiddleware:
-    """Pure ASGI CORS middleware — echoes Origin back to support credentials."""
+from fastapi.middleware.cors import CORSMiddleware
 
-    def __init__(self, app):
-        self.app = app
+app = FastAPI(title="Wishify API", version="1.0.0", lifespan=lifespan)
 
-    async def __call__(self, scope, receive, send):
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-
-        headers = dict(scope.get("headers", []))
-        origin = headers.get(b"origin", b"").decode()
-        method = scope.get("method", "")
-
-        if method == "OPTIONS":
-            cors_headers = [
-                (b"access-control-allow-origin", (origin or "*").encode()),
-                (b"access-control-allow-credentials", b"true"),
-                (b"access-control-allow-methods", b"GET, POST, PUT, PATCH, DELETE, OPTIONS"),
-                (b"access-control-allow-headers", b"Content-Type, Authorization, X-Requested-With, Cookie"),
-                (b"access-control-max-age", b"600"),
-                (b"content-length", b"0"),
-            ]
-            await send({"type": "http.response.start", "status": 200, "headers": cors_headers})
-            await send({"type": "http.response.body", "body": b""})
-            return
-
-        async def send_with_cors(message):
-            if message["type"] == "http.response.start" and origin:
-                hdrs = list(message.get("headers", []))
-                hdrs.append((b"access-control-allow-origin", origin.encode()))
-                hdrs.append((b"access-control-allow-credentials", b"true"))
-                message = {**message, "headers": hdrs}
-            await send(message)
-
-        await self.app(scope, receive, send_with_cors)
-
-
-_fastapi = FastAPI(title="Wishify API", version="1.0.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Routers
-_fastapi.include_router(auth_router.router, prefix="/api/v1")
-_fastapi.include_router(lists_router.router, prefix="/api/v1")
-_fastapi.include_router(items_router.router, prefix="/api/v1")
-_fastapi.include_router(reservations_router.router, prefix="/api/v1")
-_fastapi.include_router(contributions_router.router, prefix="/api/v1")
-_fastapi.include_router(websocket_router.router, prefix="/api/v1")
-_fastapi.include_router(util_router.router, prefix="/api/v1")
+app.include_router(auth_router.router, prefix="/api/v1")
+app.include_router(lists_router.router, prefix="/api/v1")
+app.include_router(items_router.router, prefix="/api/v1")
+app.include_router(reservations_router.router, prefix="/api/v1")
+app.include_router(contributions_router.router, prefix="/api/v1")
+app.include_router(websocket_router.router, prefix="/api/v1")
+app.include_router(util_router.router, prefix="/api/v1")
 
 
-@_fastapi.get("/api/v1/health")
+@app.get("/api/v1/health")
 async def health() -> dict:
     from sqlalchemy import text
     import redis.asyncio as aioredis
@@ -160,7 +131,3 @@ async def health() -> dict:
         logger.error("Health check Redis failed: %s", exc)
 
     return {"status": "ok", "db": db_status, "redis": redis_status}
-
-
-# Wrap FastAPI with CORS middleware directly — bypasses add_middleware machinery
-app = CORSEchoMiddleware(_fastapi)
