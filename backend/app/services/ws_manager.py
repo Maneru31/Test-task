@@ -119,17 +119,22 @@ class ConnectionManager:
     # ------------------------------------------------------------------
 
     async def publish(self, slug: str, event: dict) -> None:  # type: ignore[type-arg]
-        """Publish an event to all subscribers of this list slug via Redis.
+        """Publish an event to all subscribers of this list slug.
+
+        Uses Redis pub/sub when available (multi-worker support).
+        Falls back to direct in-process dispatch when Redis is unavailable
+        (single-worker deployments such as Railway free tier).
 
         Must be called AFTER session.commit() — never before (INV-04).
-        Fails silently if Redis is unavailable so REST remains unaffected.
         """
-        if self._redis is None:
-            return
-        try:
-            await self._redis.publish(f"list:{slug}", json.dumps(event, default=str))
-        except Exception as exc:
-            logger.warning("WS manager: publish failed for list:%s: %s", slug, exc)
+        if self._redis is not None:
+            try:
+                await self._redis.publish(f"list:{slug}", json.dumps(event, default=str))
+                return
+            except Exception as exc:
+                logger.warning("WS manager: Redis publish failed for list:%s: %s — falling back to direct dispatch", slug, exc)
+        # Fallback: dispatch directly to local connections
+        await self._dispatch(slug, event)
 
     # ------------------------------------------------------------------
     # Internal
