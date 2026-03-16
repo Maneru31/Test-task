@@ -3,6 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
+from app.schemas.item import ItemOut
 
 
 class ListCreate(BaseModel):
@@ -33,6 +34,10 @@ class ListOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ListWithItemsOut(ListOut):
+    items: list[ItemOut]
 
 
 class ListSummary(BaseModel):

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import Caller, get_caller, get_current_user
 from app.models.user import User
-from app.schemas.list import ListCreate, ListOut, ListSummary, ListUpdate
+from app.schemas.list import ListCreate, ListOut, ListSummary, ListUpdate, ListWithItemsOut
 from app.services import list_service
 
 router = APIRouter(prefix="/lists", tags=["lists"])
@@ -61,13 +61,13 @@ async def get_public_list(
     return JSONResponse(content=data)
 
 
-# 4. GET /lists/{list_id} — owner view of list metadata
-@router.get("/{list_id}", response_model=ListOut)
+# 4. GET /lists/{list_id} — owner view of list with items
+@router.get("/{list_id}", response_model=ListWithItemsOut)
 async def get_list(
     list_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> ListOut:
+) -> ListWithItemsOut:
     return await list_service.get_list_owner_view(list_id, current_user.id, db)
 
 

@@ -112,10 +112,24 @@ async def create_list(req: ListCreate, user_id: uuid.UUID, db: AsyncSession) -> 
 
 async def get_list_owner_view(
     list_id: uuid.UUID, user_id: uuid.UUID, db: AsyncSession
-) -> ListOut:
+) -> "ListWithItemsOut":
+    from app.schemas.list import ListWithItemsOut
+    from app.schemas.item import ItemOut
+
     lst = await _get_list_or_404(list_id, db)
     _require_owner(lst, user_id)
-    return ListOut.model_validate(lst)
+
+    items_result = await db.execute(
+        select(Item)
+        .where(Item.list_id == lst.id, Item.deleted_at.is_(None))
+        .order_by(Item.position, Item.created_at)
+    )
+    items = items_result.scalars().all()
+
+    return ListWithItemsOut(
+        **ListOut.model_validate(lst).model_dump(),
+        items=[ItemOut.model_validate(i) for i in items],
+    )
 
 
 async def update_list(
