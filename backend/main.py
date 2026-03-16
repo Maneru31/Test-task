@@ -5,10 +5,6 @@ from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
 from sqlalchemy import update
 
 from app.core.config import settings
@@ -88,27 +84,47 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await manager.shutdown()
 
 
+class CORSEchoMiddleware:
+    """Pure ASGI CORS middleware — echoes Origin back to support credentials."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        headers = dict(scope.get("headers", []))
+        origin = headers.get(b"origin", b"").decode()
+        method = scope.get("method", "")
+
+        if method == "OPTIONS":
+            cors_headers = [
+                (b"access-control-allow-origin", (origin or "*").encode()),
+                (b"access-control-allow-credentials", b"true"),
+                (b"access-control-allow-methods", b"GET, POST, PUT, PATCH, DELETE, OPTIONS"),
+                (b"access-control-allow-headers", b"Content-Type, Authorization, X-Requested-With, Cookie"),
+                (b"access-control-max-age", b"600"),
+                (b"content-length", b"0"),
+            ]
+            await send({"type": "http.response.start", "status": 200, "headers": cors_headers})
+            await send({"type": "http.response.body", "body": b""})
+            return
+
+        async def send_with_cors(message):
+            if message["type"] == "http.response.start" and origin:
+                hdrs = list(message.get("headers", []))
+                hdrs.append((b"access-control-allow-origin", origin.encode()))
+                hdrs.append((b"access-control-allow-credentials", b"true"))
+                message = {**message, "headers": hdrs}
+            await send(message)
+
+        await self.app(scope, receive, send_with_cors)
+
+
 app = FastAPI(title="Wishify API", version="1.0.0", lifespan=lifespan)
-
-# CORS — custom middleware that echoes Origin to support credentials + dynamic Vercel URLs
-class DynamicCORSMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        origin = request.headers.get("origin", "")
-        if request.method == "OPTIONS":
-            response = Response(status_code=200)
-            response.headers["Access-Control-Allow-Origin"] = origin or "*"
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
-            response.headers["Access-Control-Max-Age"] = "600"
-            return response
-        response = await call_next(request)
-        if origin:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
-
-app.add_middleware(DynamicCORSMiddleware)
+app.add_middleware(CORSEchoMiddleware)
 
 # Routers
 app.include_router(auth_router.router, prefix="/api/v1")
