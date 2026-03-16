@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLinkIcon } from "lucide-react";
+import Image from "next/image";
 import { formatPrice } from "@/lib/formatters";
 import { ReserveButton } from "@/components/reservation/ReserveButton";
 import { ReservationBadge } from "@/components/reservation/ReservationBadge";
@@ -24,10 +25,13 @@ export function WishItem({ item, slug, callerRole }: WishItemProps) {
       <div className="flex gap-3">
         {/* Image */}
         {item.image_url ? (
-          <img
+          <Image
             src={item.image_url}
             alt={item.name}
+            width={64}
+            height={64}
             className="size-16 shrink-0 rounded-lg object-cover"
+            unoptimized
           />
         ) : (
           <div className="size-16 shrink-0 rounded-lg bg-muted" />

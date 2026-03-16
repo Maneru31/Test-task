@@ -24,6 +24,7 @@ function CallbackHandler() {
     loginWithToken(token)
       .then(() => router.replace("/dashboard"))
       .catch(() => router.replace("/login?error=oauth_failed"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

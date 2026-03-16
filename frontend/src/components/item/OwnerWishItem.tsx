@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVerticalIcon, PencilIcon, Trash2Icon, ExternalLinkIcon, GiftIcon } from "lucide-react";
+import Image from "next/image";
 import { formatPrice } from "@/lib/formatters";
 import { EditItemModal } from "./EditItemModal";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
@@ -38,7 +39,7 @@ export function OwnerWishItem({ item, listId }: OwnerWishItemProps) {
         </button>
 
         {item.image_url ? (
-          <img src={item.image_url} alt={item.name} className="size-14 shrink-0 rounded-xl object-cover" />
+          <Image src={item.image_url} alt={item.name} width={56} height={56} className="size-14 shrink-0 rounded-xl object-cover" unoptimized />
         ) : (
           <div className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-800">
             <GiftIcon className="size-6 text-zinc-600" />

@@ -188,14 +188,14 @@ export function useListWebSocket(
           break;
         }
         case "item.created": {
-          const p = payload as { item_id: string; item: PublicItem };
+          const p = payload as { item_id: string; item: Item };
           const newItem: PublicItem = {
+            ...p.item,
             is_reserved: false,
             total_contributed: "0",
             reserved_by_me: false,
             reserver_name: null,
             my_contributions: [],
-            ...p.item,
           };
           queryClient.setQueryData<PublicList>(queryKey, (old) => {
             if (!old) return old;
