@@ -51,7 +51,7 @@ export default function ListPage({ params }: ListPageProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const sortedItems: Item[] = data
+  const sortedItems: Item[] = data?.items
     ? [...data.items].sort((a, b) => a.position - b.position)
     : [];
 
