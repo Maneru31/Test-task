@@ -142,7 +142,7 @@ async def google_callback(
     refresh_token = create_refresh_token(str(user.id))
     _set_refresh_cookie(response, refresh_token)
     frontend_callback = (
-        f"{settings.FRONTEND_URL.rstrip('/')}/auth/callback"
+        f"{settings.FRONTEND_URL.rstrip('/')}/callback"
         f"?access_token={access_token}"
     )
     return RedirectResponse(url=frontend_callback)
