@@ -43,7 +43,6 @@ export function ListSettingsScreen() {
     control,
     handleSubmit,
     reset,
-    formState: { errors },
   } = useForm<CreateListFormData>({
     resolver: zodResolver(createListSchema),
     defaultValues: {

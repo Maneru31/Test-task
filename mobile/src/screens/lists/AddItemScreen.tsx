@@ -41,7 +41,6 @@ export function AddItemScreen() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
   } = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
     defaultValues: {

@@ -40,7 +40,6 @@ export function EditItemScreen() {
     handleSubmit,
     reset,
     watch,
-    formState: { errors },
   } = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
     defaultValues: {
