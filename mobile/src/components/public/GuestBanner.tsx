@@ -23,7 +23,8 @@ export function GuestBanner() {
   const handleLogin = () => {
     // Навигируем на экран логина; после успешного входа пользователь
     // попадает в AppNavigator, но ссылку на список можно открыть заново.
-    navigation.navigate('Auth', { screen: 'Login' } as Parameters<typeof navigation.navigate>[1]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    navigation.navigate('Auth' as any, { screen: 'Login' } as any);
   };
 
   return (

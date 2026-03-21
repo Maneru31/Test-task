@@ -8,6 +8,7 @@
     "strict": true,
     "jsx": "react-jsx",
     "lib": ["ES2020"],
+    "module": "esnext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

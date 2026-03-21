@@ -11,9 +11,10 @@ import { Controller, FieldValues, Path, UseControllerProps } from 'react-hook-fo
 import { colors } from '@/constants/colors';
 
 interface FormInputProps<T extends FieldValues>
-  extends Omit<TextInputProps, 'value' | 'onChangeText' | 'onBlur'>,
+  extends Omit<TextInputProps, 'value' | 'onChangeText' | 'onBlur' | 'defaultValue'>,
     UseControllerProps<T> {
   label?: string;
+  error?: string;
   containerStyle?: ViewStyle;
 }
 
