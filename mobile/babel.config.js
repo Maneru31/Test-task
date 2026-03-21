@@ -20,8 +20,6 @@ function dynamicImportToRequire({ types: t }) {
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
   plugins: [
-    // react-native-config не работает в Jest (ESM/CJS конфликт) — отключаем в test-окружении
-    ...(process.env.NODE_ENV !== 'test' ? [['module:react-native-config']] : []),
     // В test-окружении компилируем import() → Promise.resolve(require()) (INV-03 совместимость)
     ...(process.env.NODE_ENV === 'test' ? [dynamicImportToRequire] : []),
     'react-native-reanimated/plugin', // ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ (INV-10)
