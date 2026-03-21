@@ -136,16 +136,16 @@ jobs:
           if [ -n "$APPETIZE_PUBLIC_KEY" ]; then
             echo "Обновляем существующее приложение на Appetize..."
             RESPONSE=$(curl --silent \
+              -u "$APPETIZE_API_TOKEN:" \
               -X POST \
-              -H "Authorization: Token $APPETIZE_API_TOKEN" \
-              "https://api.appetize.io/v2/apps/$APPETIZE_PUBLIC_KEY" \
+              "https://api.appetize.io/v1/apps/$APPETIZE_PUBLIC_KEY" \
               -F "file=@WishifyMobile.app.zip")
           else
             echo "Создаём новое приложение на Appetize..."
             RESPONSE=$(curl --silent \
+              -u "$APPETIZE_API_TOKEN:" \
               -X POST \
-              -H "Authorization: Token $APPETIZE_API_TOKEN" \
-              "https://api.appetize.io/v2/apps" \
+              "https://api.appetize.io/v1/apps" \
               -F "file=@WishifyMobile.app.zip" \
               -F "platform=ios")
           fi
