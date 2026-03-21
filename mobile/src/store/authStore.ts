@@ -20,18 +20,32 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
 
   initialize: async () => {
-    const token = await tokenService.getAccessToken();
-    if (!token) {
-      set({ status: 'unauthenticated' });
-      return;
-    }
     try {
-      const { apiClient } = await import('@/api/client');
-      const { data } = await apiClient.get<User>('/auth/me');
-      set({ status: 'authenticated', user: data, accessToken: token });
+      // Таймаут 5 сек на весь init — keychain может зависнуть в симуляторе
+      const timeout = new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error('init timeout')), 5000),
+      );
+      await Promise.race([
+        (async () => {
+          const token = await tokenService.getAccessToken();
+          if (!token) {
+            set({ status: 'unauthenticated' });
+            return;
+          }
+          try {
+            const { apiClient } = await import('@/api/client');
+            const { data } = await apiClient.get<User>('/auth/me');
+            set({ status: 'authenticated', user: data, accessToken: token });
+          } catch {
+            // Токен просрочен, refresh недоступен (in-memory cookie пуст)
+            await tokenService.clearTokens();
+            set({ status: 'unauthenticated' });
+          }
+        })(),
+        timeout,
+      ]);
     } catch {
-      // Токен просрочен, refresh недоступен (in-memory cookie пуст)
-      await tokenService.clearTokens();
+      // Таймаут или неожиданная ошибка — показываем экран входа
       set({ status: 'unauthenticated' });
     }
   },
