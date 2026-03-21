@@ -1,0 +1,152 @@
+# Fastfile — lanes для Wishify iOS
+# Использование:
+#   bundle exec fastlane ios test     → lint + jest + detox (CI)
+#   bundle exec fastlane ios beta     → build + upload TestFlight
+#   bundle exec fastlane ios release  → submit App Store
+
+default_platform(:ios)
+
+platform :ios do
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # LANE: test
+  # Запускает полный набор проверок: lint → typecheck → jest → detox E2E
+  # Используется в CI на каждый push в main
+  # ──────────────────────────────────────────────────────────────────────────
+  lane :test do
+    Dir.chdir("..") do
+      # Статический анализ TypeScript
+      sh("npm run lint")
+      sh("npm run typecheck")
+
+      # Unit + component тесты (Jest)
+      sh("npm test -- --ci --coverage --forceExit")
+
+      # E2E тесты через Detox (E2E-01, E2E-02, E2E-03, E2E-05)
+      # E2E-04 (2 симулятора real-time) запускается только локально
+      sh("npx detox build --configuration ios.sim.debug")
+      sh("npx detox test --configuration ios.sim.debug " \
+         "__tests__/e2e/auth.spec.ts " \
+         "__tests__/e2e/lists.spec.ts " \
+         "__tests__/e2e/public.spec.ts " \
+         "--testNamePattern='E2E-01|E2E-02|E2E-03|E2E-05'")
+    end
+  end
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # LANE: beta
+  # Собирает релизный IPA и загружает в TestFlight
+  # Требует секреты: APP_STORE_CONNECT_API_KEY, MATCH_PASSWORD
+  # ──────────────────────────────────────────────────────────────────────────
+  lane :beta do
+    # Синхронизация сертификатов и provisioning profiles через Match
+    match(type: "appstore")
+
+    # Обновить build number до timestamp (уникален для каждого TestFlight билда)
+    build_number = Time.now.strftime("%Y%m%d%H%M")
+    increment_build_number(
+      build_number: build_number,
+      xcodeproj: "ios/WishifyMobile.xcodeproj"
+    )
+
+    # Сборка IPA
+    build_app(
+      workspace: "ios/WishifyMobile.xcworkspace",
+      scheme: "WishifyMobile",
+      export_method: "app-store",
+      # Максимальный размер IPA: 50 МБ (INV из ТЗ §11.3)
+      xcargs: "-allowProvisioningUpdates"
+    )
+
+    # Загрузка в TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: File.read("fastlane/metadata/ru/release_notes.txt")
+    )
+
+    # Уведомление в Slack (опционально — настроить SLACK_WEBHOOK_URL)
+    # slack(message: "✅ Wishify #{get_version_number} (#{build_number}) загружен в TestFlight")
+  end
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # LANE: release
+  # Отправляет сборку на ревью App Store Review
+  # Запускать вручную после прохождения TestFlight-тестирования
+  # ──────────────────────────────────────────────────────────────────────────
+  lane :release do
+    match(type: "appstore")
+
+    build_app(
+      workspace: "ios/WishifyMobile.xcworkspace",
+      scheme: "WishifyMobile",
+      export_method: "app-store"
+    )
+
+    # Загрузка метаданных и сабмит на ревью
+    deliver(
+      submit_for_review: true,
+      automatic_release: false,        # Релиз вручную после апрува
+      force: true,                     # Не требовать интерактивного подтверждения
+      metadata_path: "fastlane/metadata",
+      screenshots_path: "fastlane/screenshots",
+      skip_screenshots: false,
+      app_rating_config_path: "fastlane/app_rating_config.json",
+
+      # App Store требования (ТЗ §12.3)
+      app_review_information: {
+        notes: "Тестовый аккаунт: test@wishify.app / TestPass123"
+      }
+    )
+  end
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # LANE: rollback
+  # Пересобирает и заново загружает в TestFlight с текущего git-состояния.
+  #
+  # Процедура отката:
+  #   1. git checkout <stable-tag>    # откатиться на нужный тег
+  #   2. bundle exec fastlane ios rollback
+  #   3. В TestFlight выбрать новую сборку для внешних тестировщиков
+  #
+  # App Store rollback (если релиз уже опубликован):
+  #   — нельзя «откатить» опубликованную версию автоматически
+  #   — решение: опубликовать предыдущую сборку как новый patch-релиз вручную
+  #     через App Store Connect (Manage Previous Submissions)
+  # ──────────────────────────────────────────────────────────────────────────
+  lane :rollback do
+    current_tag = sh("git describe --tags --abbrev=0").strip
+    UI.important("Rollback: пересборка с тега #{current_tag}")
+    UI.important("Если вы не на нужном теге — прервите (Ctrl+C) и выполните: git checkout <tag>")
+    UI.confirm("Продолжить rollback с #{current_tag}?")
+
+    match(type: "appstore")
+
+    build_number = Time.now.strftime("%Y%m%d%H%M")
+    increment_build_number(
+      build_number: build_number,
+      xcodeproj: "ios/WishifyMobile.xcodeproj"
+    )
+
+    build_app(
+      workspace: "ios/WishifyMobile.xcworkspace",
+      scheme: "WishifyMobile",
+      export_method: "app-store"
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: "Rollback — пересборка стабильной версии #{current_tag}"
+    )
+
+    UI.success("Rollback-сборка #{current_tag} (build #{build_number}) загружена в TestFlight")
+  end
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # ERROR HANDLER
+  # ──────────────────────────────────────────────────────────────────────────
+  error do |lane, exception|
+    UI.error("Lane :#{lane} завершилась с ошибкой: #{exception.message}")
+    # slack(message: "❌ Fastlane :#{lane} failed: #{exception.message}", success: false)
+  end
+
+end

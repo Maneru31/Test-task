@@ -1,0 +1,10 @@
+# Appfile — идентификатор приложения и Apple ID для Fastlane
+# Bundle ID должен совпадать с App Store Connect и ios/WishifyMobile/Info.plist
+
+app_identifier("com.wishify.mobile")
+
+# Замените на реальный Apple ID разработчика
+apple_id("developer@wishify.app")
+
+# Team ID из Apple Developer Console → Membership → Team ID
+# team_id("XXXXXXXXXX")

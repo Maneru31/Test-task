@@ -1,0 +1,54 @@
+# ─── Node ────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ─── React Native ────────────────────────────────────────────────────────────
+.expo/
+.expo-shared/
+ios/build/
+android/build/
+android/app/build/
+
+# Metro bundler cache
+.metro-health-check*
+
+# ─── iOS ─────────────────────────────────────────────────────────────────────
+ios/Pods/
+ios/DerivedData/
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcuserstate
+
+# ─── Окружения (НИКОГДА не коммитить реальные значения) ───────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+# .env.example — коммитить разрешено (шаблон без секретов)
+
+# ─── Fastlane ─────────────────────────────────────────────────────────────────
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/README.md
+fastlane/test_output/
+fastlane/screenshots/
+# fastlane/metadata/ — коммитить разрешено (тексты без секретов)
+
+# Сертификаты — управляются через Match (хранятся в приватном репозитории)
+*.p12
+*.cer
+*.mobileprovision
+
+# ─── Jest / Coverage ──────────────────────────────────────────────────────────
+coverage/
+jest.xml
+
+# ─── Detox ───────────────────────────────────────────────────────────────────
+artifacts/
+
+# ─── macOS ───────────────────────────────────────────────────────────────────
+.DS_Store
+*.swp
+.AppleDouble

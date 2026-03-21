@@ -1,0 +1,158 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── JOB 1: Lint + TypeCheck + Unit Tests (ubuntu, быстро и бесплатно) ───
+  lint-and-test:
+    name: Lint, TypeCheck, Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: TypeScript check
+        working-directory: mobile
+        run: npm run typecheck
+
+      - name: ESLint
+        working-directory: mobile
+        run: npm run lint
+
+      - name: Unit tests
+        working-directory: mobile
+        run: npm test -- --ci --forceExit
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: mobile/coverage/
+          retention-days: 7
+
+  # ─── JOB 2: iOS Simulator build + Appetize upload (macOS, только main) ───
+  build-and-preview:
+    name: Build iOS Simulator + Upload to Appetize
+    runs-on: macos-14
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install JS dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: mobile
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: mobile/ios/Pods
+          key: pods-${{ hashFiles('mobile/ios/Podfile.lock') }}
+          restore-keys: pods-
+
+      - name: Install CocoaPods
+        working-directory: mobile/ios
+        run: pod install
+
+      - name: Cache Xcode DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: xcode-${{ hashFiles('mobile/ios/Podfile.lock') }}-${{ hashFiles('mobile/src/**') }}
+          restore-keys: xcode-${{ hashFiles('mobile/ios/Podfile.lock') }}-
+
+      - name: Build iOS Simulator .app
+        working-directory: mobile
+        run: |
+          xcodebuild \
+            -workspace ios/WishifyMobile.xcworkspace \
+            -scheme WishifyMobile \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcpretty --color
+
+      - name: Zip .app for Appetize
+        working-directory: mobile
+        run: |
+          APP_PATH=$(find DerivedData -name "*.app" -not -path "*/PlugIns/*" | head -1)
+          echo "Found .app: $APP_PATH"
+          cd "$(dirname "$APP_PATH")"
+          zip -r WishifyMobile.app.zip "$(basename "$APP_PATH")"
+          mv WishifyMobile.app.zip $GITHUB_WORKSPACE/WishifyMobile.app.zip
+
+      # Первый запуск: создаёт новое приложение на Appetize, выводит publicKey в лог
+      - name: Upload to Appetize (create)
+        if: ${{ !secrets.APPETIZE_PUBLIC_KEY }}
+        run: |
+          RESPONSE=$(curl --silent --http1.1 https://api.appetize.io/v1/apps \
+            -F "token=${{ secrets.APPETIZE_API_TOKEN }}" \
+            -F "file=@WishifyMobile.app.zip" \
+            -F "platform=ios")
+          echo "Appetize response: $RESPONSE"
+          echo "⬆️  Скопируй publicKey из ответа выше и добавь как секрет APPETIZE_PUBLIC_KEY"
+
+      # Последующие запуски: обновляет существующее приложение
+      - name: Upload to Appetize (update)
+        if: ${{ secrets.APPETIZE_PUBLIC_KEY }}
+        run: |
+          RESPONSE=$(curl --silent --http1.1 \
+            "https://api.appetize.io/v1/apps/${{ secrets.APPETIZE_PUBLIC_KEY }}" \
+            -F "token=${{ secrets.APPETIZE_API_TOKEN }}" \
+            -F "file=@WishifyMobile.app.zip")
+          echo "Appetize response: $RESPONSE"
+          PUBLIC_KEY="${{ secrets.APPETIZE_PUBLIC_KEY }}"
+          echo ""
+          echo "✅ Приложение обновлено на Appetize!"
+          echo "🔗 Смотри здесь: https://appetize.io/app/${PUBLIC_KEY}"
+
+      - name: Upload .app as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WishifyMobile-simulator
+          path: WishifyMobile.app.zip
+          retention-days: 7

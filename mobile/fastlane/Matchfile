@@ -1,0 +1,26 @@
+# Matchfile — конфигурация fastlane match для управления сертификатами
+#
+# match синхронизирует сертификаты и provisioning profiles через Git-репозиторий
+# (зашифрованный MATCH_PASSWORD). Альтернатива — App Store Connect API key.
+#
+# Использование:
+#   bundle exec fastlane match appstore     → скачать/создать App Store certs
+#   bundle exec fastlane match development  → скачать/создать Dev certs
+#   bundle exec fastlane match nuke appstore → удалить все (осторожно!)
+
+# Приватный репозиторий с зашифрованными сертификатами
+# Задать через env: MATCH_GIT_URL=git@github.com:org/ios-certificates.git
+git_url(ENV["MATCH_GIT_URL"])
+
+storage_mode("git")
+
+# Тип по умолчанию для match в lanes
+type("appstore")
+
+app_identifier(["com.wishify.mobile"])
+
+# Apple ID — синхронизируется с Appfile
+username("developer@wishify.app")
+
+# Не клонировать репозиторий каждый раз в CI (быстрее)
+# clone_branch_directly(true)
