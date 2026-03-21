@@ -105,10 +105,21 @@ jobs:
           key: xcode-${{ hashFiles('mobile/ios/Podfile.lock') }}
           restore-keys: xcode-
 
+      - name: Bundle JS for Release
+        working-directory: mobile
+        run: |
+          npx react-native bundle \
+            --entry-file index.js \
+            --platform ios \
+            --dev false \
+            --bundle-output ios/main.jsbundle \
+            --assets-dest ios/assets
+
       - name: Build iOS Simulator .app
         working-directory: mobile
         run: |
           set -o pipefail
+          NODE_BINARY=$(which node)
           xcodebuild \
             -workspace ios/WishifyMobile.xcworkspace \
             -scheme WishifyMobile \
@@ -117,6 +128,8 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO \
+            NODE_BINARY="$NODE_BINARY" \
+            SKIP_BUNDLING=1 \
             build | xcpretty --color
 
       - name: Zip .app for Appetize
