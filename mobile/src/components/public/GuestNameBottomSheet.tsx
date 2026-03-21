@@ -71,7 +71,7 @@ export function GuestNameBottomSheet({
   const handleLogin = () => {
     reset();
     onClose();
-    navigation.navigate('Auth', { screen: 'Login' } as Parameters<typeof navigation.navigate>[1]);
+    navigation.navigate('Auth' as any, { screen: 'Login' } as any);
   };
 
   return (

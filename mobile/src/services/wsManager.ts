@@ -36,7 +36,7 @@ class WsManager {
     };
 
     this.ws.onclose = (e) => {
-      if (!e.wasClean) {
+      if (!(e as any).wasClean) {
         this.scheduleReconnect();
       }
     };

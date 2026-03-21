@@ -84,7 +84,7 @@ export function ListSettingsScreen() {
             try {
               await deleteList.mutateAsync(listId);
               // Оптимистичное удаление уже выполнено, возвращаемся на Dashboard
-              navigation.popToTop();
+              (navigation as any).popToTop();
             } catch {
               // Откат выполнен в хуке
             }
